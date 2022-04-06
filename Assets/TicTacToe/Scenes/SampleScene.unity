@@ -1169,7 +1169,7 @@ MonoBehaviour:
   _startScreen: {fileID: 0}
   _roundScreem: {fileID: 0}
   _retryScreenUI: {fileID: 0}
-  ShouldAIRandomizeFirstMove: 0
+  ShouldAIRandomizeFirstMove: 1
 --- !u!114 &1913454405
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -138,13 +138,14 @@ public class GameLogic : MonoBehaviour
                 UpdateRoundUI((int)_gameState);
                 break;
             default:
-                Debug.Log("STATE NOT VALID");
+                Debug.Log("STATE NOT VALID, NOT CHANGING STATE");
                 break;
         }
     }
 
-    private void CheckGameState()
+    private bool CheckGameState()
     {
+        
         for (int player = 1; player < 3; player++)
         {
             for (int i = 0; i < _gameBoard.GetLength(0); i++)
@@ -154,15 +155,19 @@ public class GameLogic : MonoBehaviour
                     int whoWon = player;
        
                     GameFinished(whoWon);
-                    return;
+                    _gameState = global::GameState.e_RetryScreen;
+                    return true;
                 }
                 else if (CheckIfDraw(_gameBoard))
                 {
                     GameFinished(0);
-                    return;
+                    _gameState = global::GameState.e_RetryScreen;
+                    return true;
                 }
             }
         }
+
+        return false;
     }
 
     public bool CheckRowState(int playerId)
@@ -183,9 +188,9 @@ public class GameLogic : MonoBehaviour
 
     public bool CheckIfDraw(int[,] board)
     {
-        for(int y = 0; y < 3; y++)
+        for(int y = 0; y < board.GetLength(0); y++)
         {
-            for (int x = 0; x < 3; x++)
+            for (int x = 0; x < board.GetLength(1); x++)
             {
                 if (board[y, x] == 0)
                     return false;
@@ -197,7 +202,6 @@ public class GameLogic : MonoBehaviour
 
     private void GameFinished(int whoWon)
     {
-        _gameState = global::GameState.e_RetryScreen;
         _roundScreem.gameObject.SetActive(false);
         _retryScreenUI.gameObject.SetActive(true);
         //GameBoardUI.enabled = false;
@@ -208,8 +212,6 @@ public class GameLogic : MonoBehaviour
             _retryScreenUI.transform.GetChild(0).GetComponent<Text>().text = "AI Won";
         else if (whoWon == 0)
             _retryScreenUI.transform.GetChild(0).GetComponent<Text>().text = "Draw!";
-
-        return;
     }
 
     private void RestartGame()
@@ -223,6 +225,7 @@ public class GameLogic : MonoBehaviour
 
         _roundScreem.gameObject.SetActive(true);
         _retryScreenUI.gameObject.SetActive(false);
+        _hasFirstMoveBeenDone = false;
 
         int firstTurn = Random.Range(0, 2);
 
@@ -307,9 +310,15 @@ public class GameLogic : MonoBehaviour
 
             _gameBoard[_selectedRow, _selectedCell] = 1;
 
-            CheckGameState();
+            //incase your last move is a win
+            UpdateBoardUI();
+
+            if (CheckGameState())
+                return;
+
             ChangeState();
         }
+
         UpdateBoardUI();
     }
 
@@ -324,10 +333,12 @@ public class GameLogic : MonoBehaviour
         else
             _gameBoard = _playerAI.DoMove(_gameBoard);
 
-
-        CheckGameState();
-        ChangeState();
         UpdateBoardUI();
+
+        if (CheckGameState())
+            return;
+
+        ChangeState();
     }
 
     private void RetryInput()
